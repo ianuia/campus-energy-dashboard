@@ -1,0 +1,968 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Explore simulated campus power demand, building forecasts and energy-saving actions.">
+  <meta name="theme-color" content="#122433">
+  <title>Smart Campus Energy Monitoring Dashboard</title>
+  <style>
+:root {
+  color-scheme: light;
+  --ink: #172b39;
+  --secondary: #4d6270;
+  --muted: #526a79;
+  --line: #dbe5e7;
+  --surface: #fff;
+  --page: #f3f7f8;
+  --nav: #122433;
+  --teal: #087469;
+  --teal-soft: #e8f6f2;
+  --amber: #85520a;
+  --amber-soft: #fff1d8;
+  --blue: #245c98;
+  --purple: #6243a5;
+  --focus: #075ec9;
+  font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  font-size: 100%;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; min-width: 280px; color: var(--ink); background: var(--page); line-height: 1.5; }
+button, input, select { font: inherit; }
+button, select, summary { cursor: pointer; }
+button, a, input, select, summary { -webkit-tap-highlight-color: transparent; }
+a { color: var(--teal); }
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-visible, [tabindex="-1"]:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+[hidden] { display: none !important; }
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.skip { position: fixed; z-index: 5; top: 8px; left: 8px; transform: translateY(-180%); color: white; background: #123a53; padding: 10px 14px; border-radius: 8px; }
+.skip:focus { transform: translateY(0); }
+svg { width: 20px; height: 20px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+
+.shell { min-height: 100vh; display: grid; grid-template-columns: 240px minmax(0, 1fr); }
+.sidebar { position: sticky; top: 0; display: flex; flex-direction: column; min-width: 0; height: 100vh; padding: 25px 16px; background: var(--nav); color: #edf5f8; }
+.sidebar :focus-visible, .intro-banner :focus-visible { outline-color: #9cf3e3; }
+.brand { display: flex; align-items: center; gap: 11px; padding: 1px 5px; font-size: 1.15rem; line-height: 1.2; font-weight: 720; letter-spacing: -.02em; }
+.brand-icon { display: grid; place-items: center; flex: none; width: 39px; height: 39px; border-radius: 12px; background: #b9f0df; color: #0d4c48; }
+.brand-icon svg { margin-left: 1px; width: 21px; height: 21px; stroke-width: 0; }
+.brand small { margin-top: 5px; display: block; color: #a9c0cc; font-size: .81rem; font-weight: 450; letter-spacing: 0; }
+.nav { display: grid; gap: 5px; margin-top: 43px; }
+.nav a { display: flex; align-items: center; gap: 11px; min-height: 46px; padding: 10px 11px; border-radius: 8px; text-decoration: none; color: #c8dbe4; font-size: .94rem; font-weight: 600; }
+.nav a:hover { background: #243b4b; color: #fff; }
+.nav a[aria-current="page"] { color: #def9f3; background: #21483f; box-shadow: inset 3px 0 #71e3c7; }
+.nav-count { margin-left: auto; min-width: 24px; padding: 2px 5px; border-radius: 6px; text-align: center; font-size: .8125rem; color: #ffebc6; background: #604628; }
+.side-foot { display: grid; gap: 6px; margin-top: auto; padding: 16px 8px 0; border-top: 1px solid #324755; color: #b8cdd7; font-size: .8125rem; }
+.side-foot strong { color: #e8f6f5; font-size: .875rem; font-weight: 650; }
+.status-dot { display: inline-block; vertical-align: .06em; width: 8px; height: 8px; margin-right: 5px; border-radius: 50%; background: #63939d; }
+.side-foot .status-dot { background: #70dbbd; }
+
+.workspace { min-width: 0; }
+.topbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 64px; padding: 10px 30px; background: var(--surface); border-bottom: 1px solid var(--line); }
+.topbar-location, .topbar-actions { display: flex; align-items: center; gap: 9px; }
+.topbar-location { font-weight: 650; }
+.topbar-location svg { color: var(--teal); }
+.topbar-actions { gap: 12px; }
+.data-badge, .state-pill { display: inline-flex; align-items: center; width: max-content; max-width: 100%; padding: 4px 9px; border-radius: 7px; font-size: .875rem; font-weight: 650; }
+.data-badge { color: #244b55; background: #e9f2f3; }
+.data-badge .status-dot { background: #477785; }
+.control { display: inline-flex; align-items: center; justify-content: center; gap: 7px; width: max-content; max-width: 100%; min-height: 40px; padding: 8px 13px; border: 1px solid transparent; border-radius: 8px; font-size: .875rem; font-weight: 680; line-height: 1.4; text-align: center; text-decoration: none; }
+.control svg { width: 17px; height: 17px; }
+.secondary { color: #244356; border-color: #c8d9df; background: #fff; }
+.secondary:hover { background: #edf5f7; border-color: #a8c2cb; }
+.primary { color: #fff; background: #0b756b; }
+.primary:hover { background: #075f55; }
+
+main { max-width: 1536px; margin: 0 auto; padding: 24px 30px 20px; }
+.intro-banner { position: relative; isolation: isolate; display: flex; justify-content: space-between; align-items: center; gap: 18px; min-height: 185px; padding: 23px 28px; overflow: hidden; border-radius: 15px; color: #f6fffe; background: linear-gradient(112deg,#122d3e 0%,#15474c 68%,#196358 100%); }
+.banner-grid { position: absolute; inset: -32% -5% -30% 45%; z-index: -1; opacity: .27; transform: rotate(-19deg); background-image: linear-gradient(#74aeaf 1px, transparent 1px), linear-gradient(90deg,#74aeaf 1px,transparent 1px); background-size: 37px 37px; mask-image: linear-gradient(90deg,transparent,#000 37%); }
+.banner-grid::after { position: absolute; inset: 9% 11%; border: 1px solid #a1dac4; border-radius: 47% 53% 40% 28%; content: ""; }
+.banner-label, .section-label { color: #a4e7d6; font-size: .8125rem; font-weight: 720; letter-spacing: .085em; }
+h1, h2, p { margin: 0; }
+h1 { font-weight: 750; letter-spacing: -.04em; line-height: 1.13; }
+.intro-banner h1 { margin: 5px 0 10px; font-size: clamp(1.9rem, 3.15vw, 3rem); }
+.intro-banner p { color: #d2e9e8; max-width: 42ch; font-size: 1rem; }
+.demo-box { min-width: 194px; display: grid; justify-items: start; align-content: center; gap: 6px; padding: 13px 15px; background: #103838; border: 1px solid #3b6f68; border-radius: 11px; }
+.demo-label { color: #d8f0ed; font-weight: 640; font-size: .875rem; }
+.demo-label .status-dot { background: #a6ddcb; }
+.demo-label .status-dot.live { background: #59efac; box-shadow: 0 0 0 3px #2c735c; }
+.demo-time { color: #f2fcf9; font-size: .96rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.hero-control { margin-top: 3px; color: #154c45; background: #c2f0e5; }
+.hero-control:hover { background: #ddfff6; }
+#live-icon { font-size: .72em; }
+
+.metrics { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 15px; margin: 17px 0; }
+.metric, .panel { min-width: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 13px; box-shadow: 0 2px 5px #24455307; }
+.metric { min-height: 121px; padding: 13px 15px 12px; }
+.metric-head { display: flex; justify-content: space-between; align-items: center; gap: 5px; }
+.metric-head h2 { color: #3c5361; font-size: .875rem; font-weight: 670; }
+.metric-icon { flex: none; display: grid; place-items: center; width: 33px; height: 33px; border-radius: 8px; }
+.metric-icon svg { height: 18px; width: 18px; }
+.teal-icon, .teal { color: #086359; background: var(--teal-soft); }
+.blue-icon { color: var(--blue); background: #eaf2fd; }
+.purple-icon { color: var(--purple); background: #f0eafa; }
+.amber-icon, .warning { color: var(--amber); background: var(--amber-soft); }
+.metric-value { margin-top: 2px; font-size: 1.9rem; line-height: 1.2; font-weight: 740; letter-spacing: -.045em; font-variant-numeric: tabular-nums; }
+.metric-value span + span, .metric-value:not(:has(span + span)) span { color: var(--secondary); font-size: .95rem; letter-spacing: 0; font-weight: 680; }
+.metric-note { display: block; margin-top: 5px; font-size: .875rem; color: var(--secondary); }
+.text-link { text-decoration: underline; text-underline-offset: 3px; color: var(--teal); font-weight: 650; }
+.text-link:hover { color: #124657; }
+
+.primary-grid { display: grid; grid-template-columns: minmax(0,1.24fr) minmax(0,1fr); align-items: start; gap: 15px; }
+.panel { padding: 17px; }
+.primary-grid > .panel { min-height: 341px; }
+.panel-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.panel-head h2 { font-size: 1.16rem; letter-spacing: -.02em; font-weight: 720; line-height: 1.3; }
+.panel-head p, .detail-note { margin-top: 3px; font-size: .875rem; color: var(--secondary); }
+.select-wrap { position: relative; min-width: 0; width: max-content; max-width: 100%; }
+.select-wrap::after { position: absolute; pointer-events: none; top: calc(50% - 5px); right: 13px; width: 7px; height: 7px; transform: rotate(45deg); border: solid #466371; border-width: 0 1.5px 1.5px 0; content: ""; }
+select { max-width: 100%; min-height: 40px; appearance: none; padding: 7px 31px 7px 10px; border: 1px solid #c8d9df; border-radius: 8px; color: #244356; background: #fff; font-size: .875rem; font-weight: 630; }
+select:hover { border-color: #87a7b5; }
+.chart-wrap { width: 100%; height: 191px; }
+#demand-chart { display: block; width: 100%; height: 100%; }
+.legend { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 14px; color: var(--secondary); font-size: .8125rem; }
+.legend > span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { flex: none; }
+.trend-legend { margin: 7px 0; }
+.legend-line { width: 17px; border-top: 3px solid #08786e; border-radius: 1px; }
+.legend-line.dashed { border-style: dashed; border-color: #6448ae; }
+.legend-band { width: 17px; height: 9px; border: 1px solid #a691d7; background: #eee7fb; }
+.chart-details { border-top: 1px solid #e7eef0; margin-top: 11px; }
+.chart-details summary { width: fit-content; min-height: 32px; padding: 6px 1px 0; font-size: .875rem; font-weight: 650; color: var(--teal); }
+.table-wrap { margin-top: 10px; max-width: 100%; overflow: auto; }
+table { width: 100%; border-collapse: collapse; font-size: .875rem; }
+th, td { padding: 6px 7px; border-bottom: 1px solid #e8eeef; text-align: left; }
+th { color: #365463; background: #eef4f5; }
+tbody th { color: var(--ink); background: transparent; font-weight: 600; }
+
+.segmented { display: inline-flex; flex: none; gap: 2px; padding: 3px; border: 1px solid #dde8ea; border-radius: 8px; background: #eff5f5; }
+.segmented button { min-width: 43px; min-height: 32px; padding: 4px 6px; border: 1px solid transparent; border-radius: 6px; color: #45606e; background: transparent; font-size: .875rem; font-weight: 650; }
+.segmented button:hover { color: #12383b; background: #e2efeb; }
+.segmented button[aria-pressed="true"] { color: #115b54; background: #fff; border-color: #dce8e8; box-shadow: 0 1px 2px #324d5514; }
+.map { position: relative; height: 227px; overflow: hidden; border: 1px solid #ccded9; border-radius: 10px; background: linear-gradient(154deg,#e7eee6 0% 60%,#e4efe9 60% 100%); isolation: isolate; }
+.map::before { position: absolute; z-index: -2; inset: 0; content: ""; opacity: .5; background: repeating-linear-gradient(101deg,transparent 0 38px,#dbe9e3 39px 40px); }
+.map-feature { position: absolute; z-index: -1; background: #f9fbf7; border: 1px solid #d7e1d8; pointer-events: none; }
+.avenue { width: 130%; height: 25px; left: -15%; top: 47%; transform: rotate(-11deg); }
+.path { width: 22px; height: 145%; top: -20%; left: 44%; transform: rotate(18deg); }
+.side-path { width: 13px; height: 100%; top: 5%; left: 77%; transform: rotate(40deg); }
+.crossing { width: 120%; height: 11px; top: 76%; left: -8%; transform: rotate(10deg); }
+.lawn, .lawn-two { border: 1px solid #c7dbcc; border-radius: 35% 38% 20% 30%; background: radial-gradient(circle,#b1cdb7 10%,transparent 12%) left top / 11px 11px,#cfe1d2; }
+.lawn { width: 26%; height: 21%; top: 33%; left: 4%; transform: rotate(-14deg); }
+.lawn-two { width: 21%; height: 26%; top: 60%; right: 4%; transform: rotate(-12deg); }
+.court { width: 25%; height: 20%; top: 66%; left: 6%; transform: rotate(10deg); border: 1px solid #b3d0c3; border-radius: 9px; background: #c9ddd3; }
+.map-zone, .map-north { position: absolute; color: #4e6c63; font-size: .72rem; font-weight: 730; letter-spacing: .06em; pointer-events: none; }
+.map-zone.north { top: 4%; left: 5%; }
+.map-zone.west { top: 58%; left: 5%; }
+.map-zone.south { bottom: 3%; right: 5%; }
+.map-north { top: 3%; right: 4%; }
+.marker { position: absolute; display: flex; align-items: center; justify-content: center; gap: 5px; transform: translate(-50%,-50%); min-height: 34px; max-width: 40%; padding: 5px 9px; border: 1px solid #b1c9c4; border-radius: 7px; color: #224b49; background: #fff; box-shadow: 0 2px 6px #2c584520; font-size: .875rem; line-height: 1.15; font-weight: 690; }
+.marker:hover, .marker[aria-pressed="true"] { color: #06483f; border-color: #087469; background: #e2f8ef; }
+.marker[aria-pressed="true"] { box-shadow: 0 0 0 2px #08746955; }
+.marker:focus-visible { z-index: 2; }
+.marker[data-building="library"] { top: 25%; left: 22%; }
+.marker[data-building="labs"] { top: 26%; left: 68%; }
+.marker[data-building="residence"] { top: 52%; left: 63%; }
+.marker[data-building="student"] { top: 77%; left: 68%; }
+.marker[data-building="sports"] { top: 79%; left: 20%; }
+.map-legend { margin-top: 10px; }
+.map-selection { margin-top: 8px; color: #155a51; font-size: .875rem; font-weight: 660; }
+.key { display: inline-block; flex: none; width: 9px; height: 9px; background: #0e7564; border-radius: 2px; }
+.key.above { border-radius: 1px; background: #a5600b; transform: rotate(45deg); }
+.building-list { min-height: 227px; }
+.search-wrap { display: grid; gap: 4px; margin-bottom: 9px; font-size: .875rem; font-weight: 650; }
+input[type="search"] { display: block; width: 100%; min-height: 40px; padding: 7px 9px; border: 1px solid #c8d9df; border-radius: 8px; color: var(--ink); background: #fff; font-size: .9375rem; }
+input[type="search"]::placeholder { color: #576e7a; }
+.building-list ul { display: grid; gap: 4px; list-style: none; padding: 0; margin: 0; }
+.building-row { display: flex; width: 100%; align-items: center; gap: 7px; min-height: 35px; padding: 4px 7px; color: #28515d; background: #f1f7f7; border: 1px solid #dbe8e8; border-radius: 6px; text-align: left; font-size: .875rem; font-weight: 650; }
+.building-row[aria-pressed="true"], .building-row:hover { background: #e3f6ee; border-color: #80b6a9; color: #12574d; }
+.building-row .list-demand { margin-left: auto; text-align: right; }
+.empty { color: var(--secondary); padding: 11px 0; }
+.empty button { margin-top: 9px; }
+
+.building-detail { margin-top: 15px; }
+.detail-grid { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 11px; margin: 0; }
+.detail-grid > div { padding: 9px 12px; border: 1px solid #e1eced; border-radius: 8px; background: #f5f9fa; }
+.detail-grid dt, .estimate-label { color: var(--secondary); font-size: .875rem; font-weight: 600; }
+.detail-grid dd { margin: 2px 0 0; color: #1d3b49; font-size: 1.16rem; font-weight: 720; font-variant-numeric: tabular-nums; }
+.detail-note { margin-top: 11px; }
+.view-heading { padding: 15px 2px 24px; }
+.section-label { color: #087469; }
+.view-heading h1 { margin: 6px 0 9px; font-size: clamp(2rem,4vw,3rem); }
+.view-heading p { color: var(--secondary); font-size: 1.05rem; }
+.alert-record { border: 1px solid #dce7e9; border-radius: 9px; }
+.disclosure { display: flex; width: 100%; align-items: center; gap: 12px; padding: 13px; border: 0; border-radius: 9px; color: var(--ink); background: #f9fbfb; text-align: left; }
+.disclosure:hover { background: #edf6f7; }
+.disclosure-text { display: grid; gap: 3px; margin-right: auto; }
+.disclosure-text strong { font-size: 1rem; }
+.disclosure-text > span { font-size: .875rem; color: var(--secondary); }
+.chevron { display: inline-block; flex: none; width: 8px; height: 8px; margin: -4px 3px 0 2px; border: solid #47616b; border-width: 0 2px 2px 0; transform: rotate(45deg); }
+[aria-expanded="true"] .chevron { margin-top: 4px; transform: rotate(225deg); }
+.disclosure-body { padding: 15px; border-top: 1px solid #dce7e9; }
+.disclosure-body > p { margin-top: 14px; color: var(--secondary); max-width: 76ch; }
+.action-row { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 13px; }
+.recommendation-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 15px; align-items: start; }
+.recommendation-meta { display: flex; align-items: center; gap: 9px; margin-bottom: 8px; color: var(--secondary); font-size: .875rem; }
+.recommendation-title { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; min-height: 37px; border: none; border-radius: 6px; padding: 2px 4px 2px 0; text-align: left; background: transparent; color: #134b55; font-weight: 720; font-size: clamp(1.05rem,1.65vw,1.35rem); line-height: 1.32; }
+.recommendation-title:hover { color: var(--teal); text-decoration: underline; text-underline-offset: 3px; }
+.recommendation > p, .recommendation-detail { color: var(--secondary); }
+.recommendation > p { margin-top: 6px; }
+.recommendation-detail { margin-top: 13px; padding-top: 12px; border-top: 1px solid #dce7e9; }
+.recommendation-detail > a { margin-top: 11px; }
+.estimate { display: flex; flex-wrap: wrap; gap: 13px 23px; align-items: end; margin-top: 12px; padding: 12px; border-radius: 8px; background: #eef6f5; }
+.estimate label { display: block; margin-bottom: 4px; color: #314e5a; font-size: .875rem; font-weight: 680; }
+.estimate output { display: block; color: #1b554d; font-size: 1.5rem; font-weight: 720; line-height: 1.5; font-variant-numeric: tabular-nums; }
+.footer { margin-top: 17px; color: var(--muted); font-size: .8125rem; }
+
+@media (max-width: 1150px) {
+  .shell { grid-template-columns: 206px minmax(0,1fr); }
+  main, .topbar { padding-left: 21px; padding-right: 21px; }
+  .primary-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .sidebar { padding-inline: 12px; }
+  .metric { padding-inline: 11px; }
+}
+@media (max-width: 940px) {
+  .shell { grid-template-columns: minmax(0,1fr); }
+  .sidebar { position: static; height: auto; display: flex; flex-direction: row; align-items: center; justify-content: space-between; gap: 10px; padding: 11px 18px; }
+  .nav { grid-auto-flow: column; margin-top: 0; }
+  .side-foot { display: none; }
+  .hero-break { display: none; }
+  .intro-banner h1 { max-width: 17ch; }
+}
+@media (max-width: 680px) {
+  .sidebar { display: block; padding-inline: 12px; }
+  .brand { padding-left: 2px; }
+  .brand small { display: none; }
+  .brand-icon { width: 31px; height: 31px; border-radius: 8px; }
+  .nav { margin-top: 9px; grid-template-columns: max-content max-content minmax(0,1fr); }
+  .nav a { justify-content: center; min-height: 40px; gap: 5px; padding: 7px 8px; font-size: .875rem; }
+  .nav a svg { display: none; }
+  .nav-count { padding: 1px 4px; min-width: 17px; font-size: .75rem; }
+  .topbar { padding: 7px 12px; min-height: 56px; }
+  .topbar-location { gap: 5px; font-size: .875rem; }
+  .topbar-location svg { width: 17px; height: 17px; }
+  .topbar-actions { gap: 6px; }
+  .data-badge { padding: 3px 5px; }
+  .data-badge .status-dot { display: none; }
+  .reset { padding-inline: 7px; }
+  .reset svg { display: none; }
+  main { padding: 13px 12px 18px; }
+  .intro-banner { align-items: flex-start; flex-direction: column; gap: 10px; padding: 17px; }
+  .intro-banner h1 { font-size: 1.9rem; max-width: 19ch; }
+  .demo-box { width: 100%; grid-template-columns: minmax(0,1fr) auto; justify-items: start; gap: 1px 8px; padding: 9px; }
+  .demo-time { grid-column: 1; }
+  .hero-control { grid-column: 2; grid-row: 1 / span 2; align-self: center; margin-top: 0; padding-inline: 9px; }
+  .metrics { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 9px; margin-block: 11px; }
+  .metric { min-height: 108px; padding: 10px; }
+  .metric-icon { width: 28px; height: 28px; }
+  .metric-value { font-size: 1.65rem; }
+  .primary-grid, .recommendation-grid { grid-template-columns: minmax(0,1fr); gap: 10px; }
+  .primary-grid > .panel { min-height: 0; }
+  .panel { padding: 13px; }
+  .map { height: 205px; }
+  .marker[data-building="sports"] { left: 23%; }
+  .detail-grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 7px; }
+  .detail-grid > div { padding: 8px; }
+  .detail-grid dd { font-size: 1.04rem; }
+  .building-detail { margin-top: 10px; }
+  .view-heading { padding: 9px 2px 16px; }
+  .disclosure { gap: 7px; padding: 9px; }
+  .disclosure .metric-icon { display: none; }
+  .disclosure-body { padding: 9px; }
+  .state-pill { padding: 3px 6px; }
+}
+@media (max-width: 350px) {
+  .sidebar, .topbar, main { padding-inline: 8px; }
+  .topbar-location svg, .nav-count { display: none; }
+  .topbar-actions { gap: 4px; }
+  .intro-banner { padding: 13px; }
+  .demo-box { grid-template-columns: minmax(0,1fr); }
+  .hero-control { grid-column: auto; grid-row: auto; margin-top: 5px; }
+  .map-zone { font-size: .65rem; }
+  .marker { padding-inline: 5px; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .control, .nav a, .marker { transition: background-color .12s ease, border-color .12s ease; }
+}
+  </style>
+</head>
+<body>
+  <a class="skip" href="#main-content">Skip to dashboard</a>
+  <div class="shell">
+    <aside class="sidebar" aria-label="Dashboard navigation">
+      <div class="brand">
+        <span class="brand-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 10-12h-8z" fill="currentColor"/></svg></span>
+        <div>Campus Energy<small>Operations dashboard</small></div>
+      </div>
+      <nav class="nav" aria-label="Dashboard views">
+        <a href="#overview" data-view="overview" aria-current="page"><svg aria-hidden="true" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Overview</a>
+        <a href="#alerts" data-view="alerts"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 8-3 8-3 10h18c0-2-3-2-3-10M10 21h4"/></svg>Alerts <span class="nav-count" id="nav-count" aria-hidden="true">1</span></a>
+        <a href="#recommendations" data-view="recommendations"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M20 4c1 8-3 15-10 15-3 0-5-2-5-5 0-7 7-11 15-10zM4 21l10-10"/></svg>Recommendations</a>
+      </nav>
+      <div class="side-foot">
+        <strong><span class="status-dot"></span> Simulation workspace</strong>
+        <span>5 buildings · 3 campus zones</span>
+      </div>
+    </aside>
+
+    <div class="workspace">
+      <header class="topbar">
+        <div class="topbar-location"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 21V7l8-4 8 4v14zM2 21h20M9 10h.01M15 10h.01M9 14h.01M15 14h.01M10 21v-4h4v4"/></svg> Main Campus</div>
+        <div class="topbar-actions">
+          <span class="data-badge"><span class="status-dot"></span> Simulated data</span>
+          <button class="control secondary reset" id="reset-demo" type="button"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 1 2.5 6.2M3 4v8h8"/></svg>Reset demo</button>
+        </div>
+      </header>
+
+      <main id="main-content" tabindex="-1">
+        <div id="feedback" class="sr-only" role="status" aria-live="polite"></div>
+        <section id="overview-view" aria-labelledby="overview-title">
+          <div class="intro-banner">
+            <div class="banner-grid" aria-hidden="true"></div>
+            <div class="intro-copy">
+              <span class="banner-label">ENERGY OPERATIONS</span>
+              <h1 id="overview-title" tabindex="-1">Smart Campus Energy<br class="hero-break"> Monitoring Dashboard</h1>
+              <p>Monitor building demand, anticipate peaks and find ways to save energy.</p>
+            </div>
+            <div class="demo-box">
+              <span class="demo-label"><span class="status-dot" id="demo-dot"></span><span id="demo-state">Demo snapshot</span></span>
+              <time class="demo-time" id="demo-time" datetime="2026-11-17T14:00:00+08:00">17 Nov 2026, 14:00</time>
+              <button class="control hero-control" id="live-toggle" type="button"><span aria-hidden="true" id="live-icon">▶</span><span id="live-label">Start live demo</span></button>
+            </div>
+          </div>
+
+          <div class="metrics" aria-label="Campus summary">
+            <article class="metric">
+              <div class="metric-head"><h2>Campus demand</h2><span class="metric-icon teal-icon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="m13 2-9 12h7l-1 8 10-12h-8z"/></svg></span></div>
+              <p class="metric-value"><span id="total-demand">840</span> <span>kW</span></p>
+              <p class="metric-note" id="total-baseline">4% above usual demand</p>
+            </article>
+            <article class="metric">
+              <div class="metric-head"><h2>Energy today</h2><span class="metric-icon blue-icon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 20h16M7 16v-5M12 16V8M17 16V4"/></svg></span></div>
+              <p class="metric-value"><span id="total-energy">7,770</span> <span>kWh</span></p>
+              <p class="metric-note">From midnight to last update</p>
+            </article>
+            <article class="metric">
+              <div class="metric-head"><h2>Forecast peak</h2><span class="metric-icon purple-icon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 20h16M4 20V4M7 15l4-4 3 2 5-7M15 6h4v4"/></svg></span></div>
+              <p class="metric-value">920 <span>kW</span></p>
+              <p class="metric-note">Expected today at 15:00</p>
+            </article>
+            <article class="metric">
+              <div class="metric-head"><h2>Open alerts</h2><span class="metric-icon amber-icon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 8-3 8-3 10h18c0-2-3-2-3-10M10 21h4"/></svg></span></div>
+              <p class="metric-value" id="metric-alert-count">1</p>
+              <a class="text-link metric-note" href="#alerts">View alerts</a>
+            </article>
+          </div>
+
+          <div class="primary-grid">
+            <article class="panel chart-panel" aria-labelledby="demand-heading">
+              <div class="panel-head">
+                <div><h2 id="demand-heading">Power demand trend</h2><p id="chart-scope">All buildings · power in kW</p></div>
+                <div class="select-wrap"><label for="time-range" class="sr-only">Time range</label><select id="time-range"><option value="6">Last 6 hours</option><option value="12">Last 12 hours</option></select></div>
+              </div>
+              <div class="chart-wrap"><canvas id="demand-chart" aria-hidden="true"></canvas></div>
+              <div class="legend trend-legend"><span><i class="legend-line"></i>Simulated readings</span><span><i class="legend-line dashed"></i>Forecast</span><span><i class="legend-band"></i>Forecast range</span></div>
+              <details class="chart-details">
+                <summary>View chart data table</summary>
+                <div class="table-wrap">
+                  <table>
+                    <caption id="chart-caption" class="sr-only">Power demand trend data</caption>
+                    <thead><tr><th scope="col">Time</th><th scope="col">Reading (kW)</th><th scope="col">Forecast (kW)</th><th scope="col">Range (kW)</th></tr></thead>
+                    <tbody id="chart-rows"></tbody>
+                  </table>
+                </div>
+              </details>
+            </article>
+
+            <article class="panel map-panel" aria-labelledby="map-heading">
+              <div class="panel-head">
+                <div><h2 id="map-heading">Campus map</h2><p>Choose a building to inspect demand.</p></div>
+                <div class="segmented" role="group" aria-label="Campus view"><button type="button" id="map-mode" aria-pressed="true">Map</button><button type="button" id="list-mode" aria-pressed="false">List</button></div>
+              </div>
+              <div class="map" id="campus-map" role="group" aria-label="Map of five campus buildings">
+                <span aria-hidden="true" class="map-zone north">NORTH QUAD</span>
+                <span aria-hidden="true" class="map-zone west">WEST COMMONS</span>
+                <span aria-hidden="true" class="map-zone south">SOUTH QUAD</span>
+                <span aria-hidden="true" class="map-north">↑ N</span>
+                <span aria-hidden="true" class="map-feature avenue"></span>
+                <span aria-hidden="true" class="map-feature path"></span>
+                <span aria-hidden="true" class="map-feature side-path"></span>
+                <span aria-hidden="true" class="map-feature crossing"></span>
+                <span aria-hidden="true" class="map-feature lawn"></span>
+                <span aria-hidden="true" class="map-feature lawn-two"></span>
+                <span aria-hidden="true" class="map-feature court"></span>
+                <div id="map-markers"></div>
+              </div>
+              <div id="campus-list" class="building-list" hidden>
+                <div class="search-wrap"><label for="building-search">Search building</label><input id="building-search" type="search" placeholder="Enter a building name"></div>
+                <ul id="building-list-items"></ul>
+                <p id="building-empty" class="empty" hidden>No buildings match this search. Try a different name.</p>
+              </div>
+              <div class="legend map-legend"><span><i class="key normal"></i> Within baseline</span><span><i class="key above"></i> Above baseline</span></div>
+              <p class="map-selection" id="map-selection" hidden></p>
+            </article>
+          </div>
+
+          <article class="panel building-detail" id="building-detail" aria-labelledby="detail-title">
+            <div class="panel-head"><div><h2 id="detail-title">Campus demand detail</h2><p id="detail-description">All buildings · use the map or list to show an individual building.</p></div><button class="control secondary" id="clear-building" type="button" hidden>Show all buildings</button></div>
+            <dl class="detail-grid">
+              <div><dt>Current demand</dt><dd id="detail-demand">840 kW</dd></div>
+              <div><dt>Usual demand</dt><dd id="detail-baseline">805 kW</dd></div>
+              <div><dt>Compared with baseline</dt><dd id="detail-difference">4% above baseline</dd></div>
+              <div><dt>Energy today</dt><dd id="detail-energy">7,770 kWh</dd></div>
+            </dl>
+            <p class="detail-note">Baseline means the expected power for a comparable day and time. kW measures power now. kWh measures energy over time.</p>
+          </article>
+        </section>
+
+        <section id="alerts-view" aria-labelledby="alerts-title" hidden>
+          <div class="view-heading">
+            <span class="section-label">FORECASTS AND ALERTS</span>
+            <h1 tabindex="-1" id="alerts-title">Energy alerts</h1>
+            <p>Review predicted peaks and acknowledge alerts once you have checked the details.</p>
+          </div>
+          <article class="panel alert-panel">
+            <div class="panel-head">
+              <div><h2>Alert queue</h2><p id="alert-summary">1 open · 0 acknowledged</p></div>
+              <div class="select-wrap"><label for="alert-filter" class="sr-only">Filter alerts</label><select id="alert-filter"><option value="all">All alerts</option><option value="open">Open</option><option value="ack">Acknowledged</option></select></div>
+            </div>
+            <div id="alert-record" class="alert-record">
+              <button class="disclosure" id="alert-disclosure" type="button" aria-expanded="false" aria-controls="alert-detail" aria-labelledby="alert-name" aria-describedby="alert-status">
+                <span class="metric-icon amber-icon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 4 2 20h20zM12 10v4M12 17h.01"/></svg></span>
+                <span class="disclosure-text"><strong id="alert-name">Science Labs peak demand</strong><span>Forecast threshold alert · Today at 15:00</span></span>
+                <span class="state-pill warning" id="alert-status">Open</span>
+                <span class="chevron" aria-hidden="true"></span>
+              </button>
+              <div id="alert-detail" class="disclosure-body" hidden>
+                <dl class="detail-grid">
+                  <div><dt>Expected demand</dt><dd>360 kW</dd></div>
+                  <div><dt>Expected time</dt><dd>15:00</dd></div>
+                  <div><dt>Alert threshold</dt><dd>340 kW</dd></div>
+                  <div><dt>Forecast range</dt><dd>344–376 kW</dd></div>
+                </dl>
+                <p>The forecast scenario assumes afternoon cooling and scheduled teaching-lab activity. Review the cooling schedule for unoccupied zones before the peak. Acknowledging records review in this demo; it does not change equipment settings.</p>
+                <div class="action-row"><button class="control primary" id="acknowledge-alert" type="button">Acknowledge alert</button><button class="control secondary" id="undo-acknowledge" type="button" hidden>Undo acknowledgement</button><a class="control secondary" id="show-lab-chart" href="#overview">View Science Labs trend</a></div>
+              </div>
+            </div>
+            <div id="alert-empty" class="empty" hidden><p>No alerts match this filter.</p><button class="control secondary" id="show-all-alerts" type="button">Show all alerts</button></div>
+          </article>
+        </section>
+
+        <section id="recommendations-view" aria-labelledby="recommendations-title" hidden>
+          <div class="view-heading">
+            <span class="section-label">ENERGY SAVING</span>
+            <h1 tabindex="-1" id="recommendations-title">Recommendations</h1>
+            <p>Review the evidence behind each proposed action and estimate the energy it could save.</p>
+          </div>
+          <div class="recommendation-grid">
+            <article class="panel recommendation">
+              <div class="recommendation-meta"><span class="state-pill warning">High priority</span><span>Science Labs</span></div>
+              <h2><button class="recommendation-title" id="cooling-disclosure" type="button" aria-expanded="false" aria-controls="cooling-detail">Review unoccupied-zone cooling schedule<span class="chevron" aria-hidden="true"></span></button></h2>
+              <p>The Labs are forecast to draw 360 kW at 15:00, above their 340 kW threshold.</p>
+              <div id="cooling-detail" class="recommendation-detail" hidden>
+                <p>Ask the facilities team to confirm zone occupancy and equipment requirements. If an unoccupied zone can use a reduced cooling schedule, the scenario assumes a 24 kW load reduction.</p>
+                <div class="estimate">
+                  <div class="field"><label for="duration">Duration of reduced cooling</label><div class="select-wrap"><select id="duration"><option value="1">1 hour</option><option value="2">2 hours</option><option value="3">3 hours</option><option value="4">4 hours</option></select></div></div>
+                  <div><p class="estimate-label">Estimated energy saved</p><output id="estimated-saving" for="duration">24 kWh</output></div>
+                </div>
+                <p class="detail-note" id="estimate-formula">24 kW × 1 h = 24 kWh. Estimate based on a constant load reduction.</p>
+              </div>
+            </article>
+            <article class="panel recommendation">
+              <div class="recommendation-meta"><span class="state-pill teal">Review</span><span>Library</span></div>
+              <h2><button class="recommendation-title" id="lighting-disclosure" type="button" aria-expanded="false" aria-controls="lighting-detail">Check lighting in daylit areas<span class="chevron" aria-hidden="true"></span></button></h2>
+              <p>In the snapshot, the Library uses 16 kW more than its usual 170 kW demand.</p>
+              <div id="lighting-detail" class="recommendation-detail" hidden>
+                <p>Ask staff to inspect daylit study zones and check whether lighting schedules match opening hours. The meter measures the whole building, so the source of the extra load still needs investigation.</p>
+                <p class="detail-note">A lighting savings estimate needs circuit-level measurements.</p>
+                <a class="control secondary" id="show-library-chart" href="#overview">View Library trend</a>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <footer class="footer">Simulated campus data <span aria-hidden="true">·</span> Scenario timestamps use campus local time (UTC+8).</footer>
+      </main>
+    </div>
+  </div>
+  <script>
+"use strict";
+
+const buildings = [
+  { id: "library", name: "Library", zone: "North Quad", power: 186, baseline: 170, forecast: [190, 182, 172], uncertainty: 10, profile: "academic", increments: [2, 5, 1, 4, 7] },
+  { id: "labs", name: "Science Labs", zone: "North Quad", power: 312, baseline: 260, forecast: [360, 336, 298], uncertainty: 16, profile: "academic", increments: [6, 9, 15, 27, 33] },
+  { id: "residence", name: "Residence Hall", zone: "South Quad", power: 148, baseline: 160, forecast: [155, 162, 170], uncertainty: 8, profile: "residential", increments: [-2, 0, 4, 7, 4] },
+  { id: "student", name: "Student Center", zone: "South Quad", power: 98, baseline: 110, forecast: [110, 105, 98], uncertainty: 7, profile: "academic", increments: [1, 4, 0, 3, 7] },
+  { id: "sports", name: "Sports Complex", zone: "West Commons", power: 96, baseline: 105, forecast: [105, 109, 117], uncertainty: 7, profile: "residential", increments: [-1, 1, 3, 2, 5] }
+];
+
+const profiles = {
+  academic: [.46, .44, .42, .41, .42, .44, .49, .55, .67, .78, .91, .85, .90, .94],
+  residential: [.67, .62, .57, .54, .53, .55, .61, .73, .87, .81, .76, .78, .87, .91]
+};
+const views = ["overview", "alerts", "recommendations"];
+const number = new Intl.NumberFormat("en");
+const byId = (id) => document.getElementById(id);
+const setText = (id, value) => { byId(id).textContent = value; };
+const kw = (value) => number.format(value) + " kW";
+const kwh = (value) => number.format(value) + " kWh";
+const demoInterval = 5000;
+
+let view = "overview";
+let selectedBuilding = null;
+let currentTick = 0;
+let timer = null;
+let acknowledged = false;
+const mapControls = new Map();
+const listControls = new Map();
+
+function notify(message) {
+  setText("feedback", message);
+}
+
+function timeLabel(time) {
+  const hour = Math.floor(time);
+  const minute = Math.round((time - hour) * 60);
+  return String(hour).padStart(2, "0") + ":" + String(minute).padStart(2, "0");
+}
+
+function powerAt(building, tick = currentTick) {
+  return building.power + (building.increments[tick - 1] ?? 0);
+}
+
+function baselineDifference(power, baseline) {
+  const percent = Math.round((power - baseline) / baseline * 100);
+  if (percent === 0) return "At baseline";
+  return Math.abs(percent) + "% " + (percent > 0 ? "above" : "below") + " baseline";
+}
+
+function hourlyPower(building, hour) {
+  if (hour === 14) return building.power;
+  return Math.round(building.power * profiles[building.profile][hour]);
+}
+
+function energyToday(building) {
+  let total = 0;
+  for (let hour = 1; hour <= 14; hour += 1) {
+    total += (hourlyPower(building, hour - 1) + hourlyPower(building, hour)) / 2;
+  }
+  for (let tick = 1; tick <= currentTick; tick += 1) {
+    total += (powerAt(building, tick - 1) + powerAt(building, tick)) / 12;
+  }
+  return Math.round(total);
+}
+
+function makeBuildingButton(building, isMarker) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = isMarker ? "marker" : "building-row";
+  button.dataset.building = building.id;
+  button.setAttribute("aria-label", building.name);
+  button.setAttribute("aria-pressed", "false");
+  const key = document.createElement("span");
+  key.className = "key";
+  key.setAttribute("aria-hidden", "true");
+  const name = document.createElement("span");
+  name.textContent = building.name;
+  button.append(key, name);
+  const demand = document.createElement("span");
+  if (!isMarker) {
+    demand.className = "list-demand";
+    demand.setAttribute("aria-hidden", "true");
+    button.append(demand);
+  }
+  button.addEventListener("click", () => selectBuilding(building.id));
+  return { button, key, demand };
+}
+
+function initializeCampus() {
+  for (const building of buildings) {
+    const marker = makeBuildingButton(building, true);
+    mapControls.set(building.id, marker);
+    byId("map-markers").append(marker.button);
+
+    const row = makeBuildingButton(building, false);
+    listControls.set(building.id, row);
+    const item = document.createElement("li");
+    item.append(row.button);
+    byId("building-list-items").append(item);
+  }
+}
+
+function updateBuildingControls() {
+  for (const building of buildings) {
+    const power = powerAt(building);
+    const difference = baselineDifference(power, building.baseline);
+    for (const controls of [mapControls, listControls]) {
+      const { button, key, demand } = controls.get(building.id);
+      button.setAttribute("aria-pressed", String(selectedBuilding?.id === building.id));
+      button.setAttribute("aria-description", building.zone + ", " + kw(power) + ", " + difference);
+      key.classList.toggle("above", power > building.baseline);
+      demand.textContent = kw(power);
+    }
+  }
+}
+
+function setCampusMode(mode) {
+  const showMap = mode === "map";
+  byId("campus-map").hidden = !showMap;
+  byId("campus-list").hidden = showMap;
+  byId("map-mode").setAttribute("aria-pressed", String(showMap));
+  byId("list-mode").setAttribute("aria-pressed", String(!showMap));
+}
+
+function filterBuildingList(announce = true) {
+  const query = byId("building-search").value.trim().toLowerCase();
+  let matches = 0;
+  for (const building of buildings) {
+    const matched = building.name.toLowerCase().includes(query);
+    listControls.get(building.id).button.closest("li").hidden = !matched;
+    if (matched) matches += 1;
+  }
+  byId("building-empty").hidden = matches !== 0;
+  if (announce) {
+    notify(matches === 0 ? "No buildings match this search." : matches + (matches === 1 ? " building found." : " buildings found."));
+  }
+}
+
+function updateDemandSummary() {
+  const power = buildings.reduce((total, building) => total + powerAt(building), 0);
+  const baseline = buildings.reduce((total, building) => total + building.baseline, 0);
+  const energy = buildings.reduce((total, building) => total + energyToday(building), 0);
+  setText("total-demand", number.format(power));
+  setText("total-energy", number.format(energy));
+  setText("total-baseline", baselineDifference(power, baseline));
+
+  const detailPower = selectedBuilding ? powerAt(selectedBuilding) : power;
+  const detailBaseline = selectedBuilding?.baseline ?? baseline;
+  const detailEnergy = selectedBuilding ? energyToday(selectedBuilding) : energy;
+  const difference = baselineDifference(detailPower, detailBaseline);
+  setText("detail-title", selectedBuilding ? selectedBuilding.name + " demand detail" : "Campus demand detail");
+  setText("detail-description", selectedBuilding ? selectedBuilding.zone + " · Selected building" : "All buildings · use the map or list to show an individual building.");
+  setText("detail-demand", kw(detailPower));
+  setText("detail-baseline", kw(detailBaseline));
+  setText("detail-energy", kwh(detailEnergy));
+  setText("detail-difference", difference);
+  byId("clear-building").hidden = !selectedBuilding;
+  byId("map-selection").hidden = !selectedBuilding;
+  setText("map-selection", selectedBuilding ? selectedBuilding.name + " · " + kw(detailPower) + " · " + difference : "");
+  setText("chart-scope", (selectedBuilding?.name ?? "All buildings") + " · power in kW");
+  updateBuildingControls();
+}
+
+function selectBuilding(id, announce = true) {
+  selectedBuilding = buildings.find((building) => building.id === id) ?? null;
+  updateDemandSummary();
+  updateChart();
+  if (!announce) return;
+  if (selectedBuilding) {
+    const power = powerAt(selectedBuilding);
+    notify(selectedBuilding.name + " selected, " + kw(power) + ", " + baselineDifference(power, selectedBuilding.baseline) + ".");
+  } else {
+    notify("Showing all buildings.");
+  }
+}
+
+function chartData() {
+  const range = Number(byId("time-range").value);
+  const scope = selectedBuilding ? [selectedBuilding] : buildings;
+  const readings = [];
+  for (let hour = 14 - range; hour <= 14; hour += 1) {
+    readings.push({ time: hour, value: scope.reduce((total, building) => total + hourlyPower(building, hour), 0) });
+  }
+  for (let tick = 1; tick <= currentTick; tick += 1) {
+    readings.push({ time: 14 + tick / 6, value: scope.reduce((total, building) => total + powerAt(building, tick), 0) });
+  }
+  const forecasts = [];
+  const bandWidth = scope.reduce((total, building) => total + building.uncertainty, 0);
+  for (let index = 0; index < 3; index += 1) {
+    const value = scope.reduce((total, building) => total + building.forecast[index], 0);
+    forecasts.push({ time: 15 + index, value, low: value - bandWidth, high: value + bandWidth });
+  }
+  return { readings, forecasts, start: 14 - range, end: 17 };
+}
+
+function drawChart(data) {
+  const canvas = byId("demand-chart");
+  const bounds = canvas.getBoundingClientRect();
+  if (!bounds.width || !bounds.height) return;
+  const pixelRatio = window.devicePixelRatio || 1;
+  const width = bounds.width;
+  const height = bounds.height;
+  canvas.width = Math.round(width * pixelRatio);
+  canvas.height = Math.round(height * pixelRatio);
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+  ctx.scale(pixelRatio, pixelRatio);
+  ctx.font = '12px "Segoe UI", Arial, sans-serif';
+  const left = 43;
+  const right = width - 15;
+  const top = 12;
+  const bottom = height - 27;
+  const peak = Math.max(...data.forecasts.map((point) => point.high), 100);
+  const step = peak > 800 ? 250 : peak > 250 ? 100 : 50;
+  const max = Math.ceil(peak / step) * step;
+  const x = (time) => left + (time - data.start) / (data.end - data.start) * (right - left);
+  const y = (value) => bottom - value / max * (bottom - top);
+
+  ctx.textAlign = "right";
+  ctx.textBaseline = "middle";
+  for (let value = 0; value <= max; value += step) {
+    const lineY = y(value);
+    ctx.strokeStyle = "#e0eaeb";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(left, lineY);
+    ctx.lineTo(right, lineY);
+    ctx.stroke();
+    ctx.fillStyle = "#526974";
+    ctx.fillText(number.format(value), left - 8, lineY);
+  }
+
+  const ticks = [data.start, data.start + 2, data.start + 4, data.start + 6];
+  if (data.start === 2) ticks.push(10, 12, 14);
+  ticks.push(17);
+  ctx.textAlign = "center";
+  const tickSkip = width < 375 && ticks.length > 5 ? 2 : 1;
+  for (let index = 0; index < ticks.length; index += 1) {
+    if (index % tickSkip && index !== ticks.length - 1) continue;
+    const hour = ticks[index];
+    ctx.fillText(timeLabel(hour), x(hour), bottom + 15);
+  }
+
+  const reading = data.readings.at(-1);
+  const measuredArea = ctx.createLinearGradient(0, top, 0, bottom);
+  measuredArea.addColorStop(0, "#80cdb94c");
+  measuredArea.addColorStop(1, "#caffeb1a");
+  ctx.beginPath();
+  ctx.moveTo(x(data.start), bottom);
+  for (const point of data.readings) ctx.lineTo(x(point.time), y(point.value));
+  ctx.lineTo(x(reading.time), bottom);
+  ctx.closePath();
+  ctx.fillStyle = measuredArea;
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.moveTo(x(reading.time), y(reading.value));
+  for (const point of data.forecasts) ctx.lineTo(x(point.time), y(point.high));
+  for (const point of [...data.forecasts].reverse()) ctx.lineTo(x(point.time), y(point.low));
+  ctx.closePath();
+  ctx.fillStyle = "#eae1f8";
+  ctx.fill();
+
+  function trend(points, color, dashed) {
+    ctx.beginPath();
+    ctx.setLineDash(dashed ? [6, 4] : []);
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.lineWidth = 2.5;
+    ctx.strokeStyle = color;
+    points.forEach((point, index) => {
+      if (index === 0) ctx.moveTo(x(point.time), y(point.value));
+      else ctx.lineTo(x(point.time), y(point.value));
+    });
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  trend(data.readings, "#08786e", false);
+  trend([reading, ...data.forecasts], "#6448ae", true);
+  ctx.beginPath();
+  ctx.arc(x(reading.time), y(reading.value), 4, 0, Math.PI * 2);
+  ctx.fillStyle = "#08786e";
+  ctx.fill();
+  ctx.strokeStyle = "#fff";
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+}
+
+function updateChart() {
+  const data = chartData();
+  drawChart(data);
+  const fragment = document.createDocumentFragment();
+  for (const point of [...data.readings, ...data.forecasts]) {
+    const row = document.createElement("tr");
+    const time = document.createElement("th");
+    time.scope = "row";
+    time.textContent = timeLabel(point.time);
+    row.append(time);
+    const isForecast = point.low !== undefined;
+    const values = isForecast ? ["—", number.format(point.value), number.format(point.low) + "–" + number.format(point.high)] : [number.format(point.value), "—", "—"];
+    for (const value of values) {
+      const cell = document.createElement("td");
+      cell.textContent = value;
+      row.append(cell);
+    }
+    fragment.append(row);
+  }
+  byId("chart-rows").replaceChildren(fragment);
+  setText("chart-caption", (selectedBuilding?.name ?? "All buildings") + " simulated readings and projected power");
+}
+
+function updateDemoStatus() {
+  const playing = timer !== null;
+  const time = timeLabel(14 + currentTick / 6);
+  setText("demo-time", "17 Nov 2026, " + time);
+  byId("demo-time").dateTime = "2026-11-17T" + time + ":00+08:00";
+  setText("demo-state", playing ? "Live simulation" : currentTick === 0 ? "Demo snapshot" : currentTick === 5 ? "Demo complete" : "Demo paused");
+  setText("live-label", playing ? "Pause live demo" : currentTick === 5 ? "Replay live demo" : currentTick ? "Resume live demo" : "Start live demo");
+  setText("live-icon", playing ? "Ⅱ" : "▶");
+  byId("demo-dot").classList.toggle("live", playing);
+}
+
+function stopDemo() {
+  if (timer !== null) window.clearInterval(timer);
+  timer = null;
+  updateDemoStatus();
+}
+
+function advanceDemo() {
+  currentTick += 1;
+  updateDemandSummary();
+  updateChart();
+  if (currentTick === 5) {
+    stopDemo();
+    notify("The live simulation has finished at 14:50. Select Replay live demo to run it again.");
+  } else {
+    updateDemoStatus();
+  }
+}
+
+function toggleDemo() {
+  if (timer !== null) {
+    stopDemo();
+    notify("Live simulation paused at " + timeLabel(14 + currentTick / 6) + ".");
+    return;
+  }
+  if (currentTick === 5) {
+    currentTick = 0;
+    updateDemandSummary();
+    updateChart();
+  }
+  timer = window.setInterval(advanceDemo, demoInterval);
+  updateDemoStatus();
+  notify("Live simulation running. Simulated readings update every five seconds.");
+}
+
+function toggleDisclosure(button, expanded = button.getAttribute("aria-expanded") !== "true") {
+  button.setAttribute("aria-expanded", String(expanded));
+  byId(button.getAttribute("aria-controls")).hidden = !expanded;
+}
+
+function renderAlerts() {
+  const filter = byId("alert-filter").value;
+  const match = filter === "all" || filter === "open" && !acknowledged || filter === "ack" && acknowledged;
+  byId("alert-record").hidden = !match;
+  byId("alert-empty").hidden = match;
+  setText("alert-summary", acknowledged ? "0 open · 1 acknowledged" : "1 open · 0 acknowledged");
+  setText("alert-status", acknowledged ? "Acknowledged" : "Open");
+  byId("alert-status").className = "state-pill " + (acknowledged ? "teal" : "warning");
+  byId("acknowledge-alert").hidden = acknowledged;
+  byId("undo-acknowledge").hidden = !acknowledged;
+  setText("metric-alert-count", acknowledged ? "0" : "1");
+  setText("nav-count", acknowledged ? "0" : "1");
+}
+
+function setAcknowledgement(value) {
+  acknowledged = value;
+  renderAlerts();
+  const replacement = byId("alert-empty").hidden ? byId(value ? "undo-acknowledge" : "acknowledge-alert") : byId("show-all-alerts");
+  replacement.focus();
+  notify(value ? "Science Labs peak demand acknowledged. You can undo this action." : "Acknowledgement undone. Science Labs peak demand is open.");
+}
+
+function updateEstimate() {
+  const hours = Number(byId("duration").value);
+  const savings = 24 * hours;
+  byId("estimated-saving").value = kwh(savings);
+  setText("estimate-formula", "24 kW × " + hours + " h = " + kwh(savings) + ". Estimate based on a constant load reduction.");
+}
+
+function route(focusHeading = true) {
+  const target = location.hash.slice(1);
+  if (target && !views.includes(target)) return;
+  view = target || "overview";
+  for (const name of views) byId(name + "-view").hidden = name !== view;
+  for (const link of document.querySelectorAll("[data-view]")) {
+    if (link.dataset.view === view) link.setAttribute("aria-current", "page");
+    else link.removeAttribute("aria-current");
+  }
+  if (view === "overview") updateChart();
+  if (focusHeading) {
+    byId(view + "-title").focus({ preventScroll: true });
+    window.scrollTo(0, 0);
+  }
+}
+
+function resetDemo() {
+  currentTick = 0;
+  stopDemo();
+  byId("time-range").value = "6";
+  byId("building-search").value = "";
+  byId("alert-filter").value = "all";
+  byId("duration").value = "1";
+  document.querySelector(".chart-details").open = false;
+  for (const id of ["alert-disclosure", "cooling-disclosure", "lighting-disclosure"]) toggleDisclosure(byId(id), false);
+  acknowledged = false;
+  setCampusMode("map");
+  filterBuildingList(false);
+  selectBuilding(null, false);
+  renderAlerts();
+  updateEstimate();
+  if (location.hash !== "#overview") location.hash = "overview";
+  else route();
+  notify("Demo reset to the campus snapshot at 14:00.");
+}
+
+initializeCampus();
+byId("map-mode").addEventListener("click", () => setCampusMode("map"));
+byId("list-mode").addEventListener("click", () => setCampusMode("list"));
+byId("building-search").addEventListener("input", () => filterBuildingList());
+byId("time-range").addEventListener("change", () => {
+  updateChart();
+  notify("Chart time range changed to the last " + byId("time-range").value + " hours.");
+});
+byId("clear-building").addEventListener("click", () => {
+  selectBuilding(null);
+  byId(byId("campus-list").hidden ? "map-mode" : "list-mode").focus();
+});
+byId("live-toggle").addEventListener("click", toggleDemo);
+byId("reset-demo").addEventListener("click", resetDemo);
+for (const id of ["alert-disclosure", "cooling-disclosure", "lighting-disclosure"]) {
+  byId(id).addEventListener("click", (event) => toggleDisclosure(event.currentTarget));
+}
+byId("alert-filter").addEventListener("change", () => {
+  renderAlerts();
+  notify(byId("alert-empty").hidden ? "One alert matches this filter." : "No alerts match this filter.");
+});
+byId("show-all-alerts").addEventListener("click", () => {
+  byId("alert-filter").value = "all";
+  renderAlerts();
+  byId("alert-filter").focus();
+  notify("Showing all alerts.");
+});
+byId("acknowledge-alert").addEventListener("click", () => setAcknowledgement(true));
+byId("undo-acknowledge").addEventListener("click", () => setAcknowledgement(false));
+byId("show-lab-chart").addEventListener("click", () => selectBuilding("labs", false));
+byId("show-library-chart").addEventListener("click", () => selectBuilding("library", false));
+byId("duration").addEventListener("change", updateEstimate);
+window.addEventListener("hashchange", () => route());
+const resizeObserver = new ResizeObserver(() => { if (view === "overview") drawChart(chartData()); });
+resizeObserver.observe(byId("demand-chart"));
+updateDemandSummary();
+route(false);
+  </script>
+</body>
+</html>
